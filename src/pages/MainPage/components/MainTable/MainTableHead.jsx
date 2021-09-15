@@ -22,7 +22,7 @@ const MainTableHead = () => {
 		<TableHead>
 			<TableRow>
 				{headers.map((header) => (
-					<TableCell key={header} className={classes.tableHead}>
+					<TableCell className={classes.tableHead} key={header}>
 						{header}
 					</TableCell>
 				))}

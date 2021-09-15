@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const endpoint = "https://ad-react-exercise.free.beeceptor.com/process";
+const endpoint = "https://re-test.free.beeceptor.com/process";
 
 const getProcessDataService = async () => {
 	try {
@@ -23,7 +23,25 @@ const filterProcessDataService = async (filter) => {
 const createItemService = async (item) => {
 	try {
 		const createItemResponse = await axios.post(`${endpoint}/create`, item);
-		return createItemResponse.data;
+		return createItemResponse;
+	} catch (error) {
+		return error;
+	}
+};
+
+const getSpecsService = async () => {
+	try {
+		const getSpecsResponse = await axios.get(`${endpoint}/specs`);
+		return getSpecsResponse.data;
+	} catch (error) {
+		return error;
+	}
+};
+
+const getTypesService = async () => {
+	try {
+		const getTypesResponse = await axios.get(`${endpoint}/types`);
+		return getTypesResponse.data;
 	} catch (error) {
 		return error;
 	}
@@ -33,4 +51,6 @@ export const services = {
 	getProcessDataService,
 	filterProcessDataService,
 	createItemService,
+	getSpecsService,
+	getTypesService,
 };

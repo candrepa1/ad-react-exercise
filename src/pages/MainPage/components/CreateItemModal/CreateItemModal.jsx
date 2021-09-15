@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	Button,
 	Dialog,
@@ -11,190 +11,219 @@ import {
 } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import {
 	createItem,
+	getSpecs,
+	getTypes,
 	isCreatingModalOpenSelect,
+	loadingSelect,
 	setIsOpen,
+	specsSelect,
+	typesSelect,
 } from "../../MainPage.slice";
 import { useStylesModal } from "./CreateItemModal.styles";
 import CloseIcon from "@material-ui/icons/Close";
 import MuiDialogTitle from "@material-ui/core/DialogTitle";
+import BackdropLoader from "../BackdropLoader/BackdropLoader";
 
 const CreateItemModal = () => {
 	const dispatch = useDispatch();
 	const classes = useStylesModal();
 	const open = useSelector(isCreatingModalOpenSelect);
+	const specs = useSelector(specsSelect);
+	const types = useSelector(typesSelect);
+	const loading = useSelector(loadingSelect);
 
-	const specs = [
-		{
-			value: 1,
-			label: "Spec1",
-		},
-		{
-			value: 2,
-			label: "Spec2",
-		},
-		{
-			value: 3,
-			label: "Spec3",
-		},
-	];
+	const requiredMessage = "This field is required";
 
-	const types = [
-		{
-			value: 1,
-			label: "Type1",
-		},
-		{
-			value: 2,
-			label: "Type2",
-		},
-		{
-			value: 3,
-			label: "Type3",
-		},
-	];
+	const schema = yup.object().shape({
+		spec: yup.string().required(requiredMessage),
+		subSpec: yup.string(),
+		title: yup.string().required(requiredMessage),
+		description: yup.string().required(requiredMessage),
+		type: yup.string().required(requiredMessage),
+	});
 
-	const { handleSubmit, control } = useForm();
+	const {
+		handleSubmit,
+		reset,
+		control,
+		formState: { errors },
+	} = useForm({
+		resolver: yupResolver(schema),
+		defaultValues: {
+			spec: "",
+			subSpec: "",
+			title: "",
+			description: "",
+			type: "",
+		},
+	});
 
 	const closeCreateItemModal = () => dispatch(setIsOpen(false));
 
 	const handleFormSubmit = (data) => {
 		dispatch(createItem(data)).then(({ meta }) => {
-			if (meta.requestStatus === "fulfilled") closeCreateItemModal();
+			if (meta.requestStatus === "fulfilled") {
+				closeCreateItemModal();
+				reset();
+			}
 		});
 	};
 
+	useEffect(() => {
+		dispatch(getSpecs());
+		dispatch(getTypes());
+	}, [dispatch]);
+
 	return (
-		<Dialog
-			open={open}
-			onClose={closeCreateItemModal}
-			aria-labelledby="create-item-modal"
-			fullWidth
-		>
-			<MuiDialogTitle disableTypography className={classes.header}>
-				<Typography variant="h6">Create item</Typography>
-				{closeCreateItemModal ? (
-					<IconButton aria-label="close" onClick={closeCreateItemModal}>
-						<CloseIcon />
-					</IconButton>
-				) : null}
-			</MuiDialogTitle>
-			<DialogContent className={classes.content} dividers>
-				<Typography gutterBottom className={classes.title}>
-					General info
-				</Typography>
-				<form>
-					<Controller
-						name="spec"
-						control={control}
-						render={({ field: { onChange, value } }) => (
-							<TextField
-								select
-								label="Spec section"
-								value={value}
-								onChange={onChange}
-								variant="outlined"
-								size="small"
-								className={classes.textField}
-								required
-							>
-								{specs.map((option) => (
-									<MenuItem key={option.value} value={option.value}>
-										{option.label}
-									</MenuItem>
-								))}
-							</TextField>
-						)}
-					/>
-					<Controller
-						name="subSpec"
-						control={control}
-						render={({ field: { onChange, value } }) => (
-							<TextField
-								label="Sub spec section"
-								variant="outlined"
-								value={value}
-								onChange={onChange}
-								size="small"
-								className={classes.subSpecField}
-								InputLabelProps={{ shrink: true }}
-							/>
-						)}
-					/>
-					<Controller
-						name="title"
-						control={control}
-						render={({ field: { onChange, value } }) => (
-							<TextField
-								label="Title"
-								variant="outlined"
-								value={value}
-								onChange={onChange}
-								size="small"
-								required
-								className={classes.textField}
-								InputLabelProps={{ shrink: true }}
-							/>
-						)}
-					/>
-					<Controller
-						name="description"
-						control={control}
-						render={({ field: { onChange, value } }) => (
-							<TextField
-								label="Description"
-								variant="outlined"
-								value={value}
-								onChange={onChange}
-								size="small"
-								required
-								multiline
-								minRows={3}
-								className={classes.textField}
-								InputLabelProps={{ shrink: true }}
-							/>
-						)}
-					/>
-					<Controller
-						name="type"
-						control={control}
-						render={({ field: { onChange, value } }) => (
-							<TextField
-								select
-								label="Type"
-								value={value}
-								onChange={onChange}
-								className={classes.textField}
-								variant="outlined"
-								size="small"
-								required
-							>
-								{types.map((option) => (
-									<MenuItem key={option.value} value={option.value}>
-										{option.label}
-									</MenuItem>
-								))}
-							</TextField>
-						)}
-					/>
-				</form>
-			</DialogContent>
-			<DialogActions className={classes.footer}>
-				<Button autoFocus onClick={closeCreateItemModal} color="primary">
-					Cancel
-				</Button>
-				<Button
-					autoFocus
-					onClick={handleSubmit(handleFormSubmit)}
-					color="primary"
-					variant="contained"
-				>
-					Create
-				</Button>
-			</DialogActions>
-		</Dialog>
+		<>
+			<BackdropLoader isOpen={loading} />
+			<Dialog
+				aria-labelledby="create-item-modal"
+				onClose={closeCreateItemModal}
+				open={open}
+				fullWidth
+			>
+				<MuiDialogTitle className={classes.header} disableTypography>
+					<Typography variant="h6">Create item</Typography>
+					{closeCreateItemModal ? (
+						<IconButton
+							aria-label="close-button"
+							onClick={closeCreateItemModal}
+						>
+							<CloseIcon />
+						</IconButton>
+					) : null}
+				</MuiDialogTitle>
+				<DialogContent className={classes.content} dividers>
+					<Typography className={classes.title} gutterBottom>
+						General info
+					</Typography>
+					<form>
+						<Controller
+							control={control}
+							name="spec"
+							render={({ field: { onChange, value } }) => (
+								<TextField
+									className={classes.textField}
+									error={errors.spec ? true : false}
+									helperText={errors.spec?.message}
+									label="Spec section"
+									onChange={onChange}
+									required
+									select
+									size="small"
+									value={value}
+									variant="outlined"
+								>
+									{specs.map((option) => (
+										<MenuItem key={option.value} value={option.value}>
+											{option.label}
+										</MenuItem>
+									))}
+								</TextField>
+							)}
+						/>
+						<Controller
+							control={control}
+							name="subSpec"
+							render={({ field: { onChange, value } }) => (
+								<TextField
+									className={classes.subSpecField}
+									error={errors.subSpec ? true : false}
+									helperText={errors.subSpec?.message}
+									InputLabelProps={{ shrink: true }}
+									label="Sub spec section"
+									onChange={onChange}
+									size="small"
+									value={value}
+									variant="outlined"
+								/>
+							)}
+						/>
+						<Controller
+							control={control}
+							name="title"
+							render={({ field: { onChange, value } }) => (
+								<TextField
+									className={classes.textField}
+									error={errors.title ? true : false}
+									helperText={errors.title?.message}
+									InputLabelProps={{ shrink: true }}
+									label="Title"
+									onChange={onChange}
+									required
+									size="small"
+									value={value}
+									variant="outlined"
+								/>
+							)}
+						/>
+						<Controller
+							control={control}
+							name="description"
+							render={({ field: { onChange, value } }) => (
+								<TextField
+									className={classes.textField}
+									error={errors.description ? true : false}
+									helperText={errors.description?.message}
+									InputLabelProps={{ shrink: true }}
+									label="Description"
+									minRows={3}
+									multiline
+									onChange={onChange}
+									required
+									size="small"
+									value={value}
+									variant="outlined"
+								/>
+							)}
+						/>
+						<Controller
+							control={control}
+							name="type"
+							render={({ field: { onChange, value } }) => (
+								<TextField
+									className={classes.textField}
+									error={errors.type ? true : false}
+									helperText={errors.type?.message}
+									label="Type"
+									onChange={onChange}
+									required
+									select
+									size="small"
+									value={value}
+									variant="outlined"
+								>
+									{types.map((option) => (
+										<MenuItem key={option.value} value={option.value}>
+											{option.label}
+										</MenuItem>
+									))}
+								</TextField>
+							)}
+						/>
+					</form>
+				</DialogContent>
+				<DialogActions className={classes.footer}>
+					<Button autoFocus color="primary" onClick={closeCreateItemModal}>
+						Cancel
+					</Button>
+					<Button
+						autoFocus
+						color="primary"
+						onClick={handleSubmit(handleFormSubmit)}
+						variant="contained"
+					>
+						Create
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</>
 	);
 };
 

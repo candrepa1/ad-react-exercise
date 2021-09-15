@@ -27,23 +27,22 @@ const Menu = () => {
 
 	return (
 		<>
-			<AppBar position="static" elevation={0}>
+			<AppBar elevation={0} position="static">
 				<Tabs
 					className={classes.tabs}
-					value={value}
-					onChange={handleChange}
-					aria-label="simple tabs example"
 					indicatorColor="primary"
+					onChange={handleChange}
+					value={value}
 				>
-					<Tab label="Items" className={classes.tab} />
-					<Tab label="Packages" className={classes.tab} />
+					<Tab className={classes.tab} label="Items" />
+					<Tab className={classes.tab} label="Packages" />
 				</Tabs>
 			</AppBar>
-			<TabPanel value={value} index={0}>
-				<TabView tabName="item" />
+			<TabPanel index={0} value={value}>
+				<TabView />
 			</TabPanel>
-			<TabPanel value={value} index={1}>
-				<TabView tabName="package" />
+			<TabPanel index={1} value={value}>
+				<p>Packages view</p>
 			</TabPanel>
 		</>
 	);

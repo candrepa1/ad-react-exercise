@@ -6,11 +6,13 @@ const initialState = {
 	error: null,
 	rows: [],
 	isCreatingItem: false,
+	specs: [],
+	types: [],
 };
 
 export const getProcessData = createAsyncThunk(
 	"process/getProcessData",
-	async (data, thunkAPI) => {
+	async (data = {}, thunkAPI) => {
 		const response = await services.getProcessDataService();
 		return response
 			? response
@@ -32,7 +34,25 @@ export const createItem = createAsyncThunk(
 	"process/createItem",
 	async (item, thunkAPI) => {
 		const response = await services.createItemService(item);
-		return response ? response : thunkAPI.rejectWithValue("create item error");
+		return response.status === 200
+			? response.data
+			: thunkAPI.rejectWithValue("create item error");
+	}
+);
+
+export const getSpecs = createAsyncThunk(
+	"process/getSpecs",
+	async (data = {}, thunkAPI) => {
+		const response = await services.getSpecsService();
+		return response ? response : thunkAPI.rejectWithValue("get specs error");
+	}
+);
+
+export const getTypes = createAsyncThunk(
+	"process/getTypes",
+	async (data = {}, thunkAPI) => {
+		const response = await services.getTypesService();
+		return response ? response : thunkAPI.rejectWithValue("get types error");
 	}
 );
 
@@ -85,12 +105,37 @@ const processSlice = createSlice({
 			state.error = payload;
 			state.loading = false;
 		});
+		builder.addCase(getSpecs.pending, (state) => {
+			state.loading = true;
+		});
+		builder.addCase(getSpecs.fulfilled, (state, { payload }) => {
+			state.specs = payload.data;
+			state.loading = false;
+		});
+		builder.addCase(getSpecs.rejected, (state, { payload }) => {
+			state.error = payload;
+			state.loading = false;
+		});
+		builder.addCase(getTypes.pending, (state) => {
+			state.loading = true;
+		});
+		builder.addCase(getTypes.fulfilled, (state, { payload }) => {
+			state.types = payload.data;
+			state.loading = false;
+		});
+		builder.addCase(getTypes.rejected, (state, { payload }) => {
+			state.error = payload;
+			state.loading = false;
+		});
 	},
 });
 
 export const rowsSelect = (state) => state.process.rows.data;
 export const isCreatingModalOpenSelect = (state) =>
 	state.process.isCreatingItem;
+export const specsSelect = (state) => state.process.specs;
+export const typesSelect = (state) => state.process.types;
+export const loadingSelect = (state) => state.process.loading;
 
 export const { setIsOpen } = processSlice.actions;
 

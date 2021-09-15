@@ -11,7 +11,7 @@ const MainTable = () => {
 	const processRows = useSelector(rowsSelect);
 
 	useEffect(() => {
-		dispatch(getProcessData({}));
+		dispatch(getProcessData());
 	}, [dispatch]);
 	return (
 		<TableContainer component={Paper}>
